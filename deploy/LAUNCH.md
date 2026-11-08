@@ -31,7 +31,7 @@ pull request.
    `bundles-<photo tag>-<light tag>`. The release is public: the host fetches it with curl and
    needs no GitHub account and no token.
 
-       sudo -u ubuntu STUDIO_BUNDLE_ROOT=/opt/openvibe.studio/public/apps \
+       sudo -u ubuntu STUDIO_BUNDLE_ROOT=/var/lib/openvibe-studio/apps \
          /opt/openvibe.studio/scripts/fetch-bundles.sh
 
    Run it **after each deploy** and **whenever the pinned tags change** (the release name follows

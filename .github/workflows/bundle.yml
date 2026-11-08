@@ -4,6 +4,12 @@ name: bundles
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "server/bundle-files.js"
+      - "server/bundles.js"
+      - ".github/workflows/bundle.yml"
   workflow_dispatch:
 permissions:
   contents: read

@@ -27,7 +27,6 @@ function createPages({ config, sso }) {
             '<span class="eyebrow">OPENVIBE STUDIO</span>' +
             '<h1>Edit photos right in your browser.</h1>' +
             '<p>Photo for layers and retouching. Light for your library and RAW files. Free and open source, with your files on OpenVibe.</p>' +
-            '<p><a class="button-primary" href="/photo">Open Photo</a> <a class="button-secondary" href="/light">Open Light</a></p>' +
             '</div></section>' +
             '<section id="apps"><div class="app-grid">' + HOME_APPS.map(appCard).join('') + '</div></section>' +
             '<section id="limits"><h2>Good to know</h2><ul class="limit-list">' +

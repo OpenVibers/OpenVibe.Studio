@@ -4,12 +4,16 @@
  * fails. A bundle that loads but never starts is worse than no bundle at all, so the check waits
  * for the app's own "it is running" signal and fails the build when it never comes.
  *
- * Usage: node scripts/smoke.js --app photo --dir artifacts/photo [--timeout 240]
+ * The bundle is served by the service itself, so the check runs against the headers a person
+ * really gets: the WebAssembly type, the cache rules and the content security policy.
+ *
+ * Usage: node scripts/smoke.js --app photo --dir artifacts/photo [--timeout 300]
  */
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { bundleHeaders } = require('../server/bundles');
+const { createApp } = require('../server/app');
+const { load: loadConfig } = require('../server/config');
 
 const args = process.argv.slice(2);
 function argOf(name, fallback) {
@@ -25,42 +29,6 @@ const SIGNALS = {
     photo: { loading: '#photocraft_loading', canvas: '#photocraft_canvas', failure: /PhotoCraft failed to start|PhotoCraft stopped/i },
     light: { loading: '#lightcraft_loading', canvas: '#lightcraft_canvas', failure: /LightCraft failed to load/i },
 };
-
-function serve(root) {
-    return http.createServer((req, res) => {
-        const rel = decodeURIComponent((req.url || '/').split('?')[0]).replace(/^\/+/, '');
-        const file = path.resolve(root, rel);
-        if (file !== root && !file.startsWith(root + path.sep)) {
-            res.statusCode = 403;
-            res.end('no');
-            return;
-        }
-        let stat;
-        try {
-            stat = fs.statSync(file);
-        } catch {
-            res.statusCode = 404;
-            res.end('not found');
-            return;
-        }
-        if (stat.isDirectory()) {
-            const index = path.join(file, 'index.html');
-            if (!fs.existsSync(index)) {
-                res.statusCode = 404;
-                res.end('not found');
-                return;
-            }
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.end(fs.readFileSync(index));
-            return;
-        }
-        const headers = bundleHeaders(app, rel);
-        for (const [key, value] of Object.entries(headers)) res.setHeader(key, value);
-        res.setHeader('Content-Length', stat.size);
-        res.statusCode = 200;
-        fs.createReadStream(file).pipe(res);
-    });
-}
 
 async function main() {
     const signal = SIGNALS[app];
@@ -79,17 +47,37 @@ async function main() {
         console.error('smoke: playwright-core is not installed');
         process.exit(2);
     }
-    const server = serve(dir);
+    const root = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'studio-smoke-'));
+    fs.symlinkSync(dir, path.join(root, app), 'dir');
+    const config = Object.assign(loadConfig({}), { bundleRoot: root });
+    const { app: service } = createApp({ config });
+    const server = http.createServer(service);
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const port = server.address().port;
-    const url = 'http://127.0.0.1:' + port + '/index.html';
+    const url = 'http://127.0.0.1:' + port + '/apps/' + app + '/index.html';
+    const launchArgs = ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'];
+    const candidates = [process.env.CHROME_PATH, '/opt/google/chrome/chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
     let browser;
     const errors = [];
     try {
-        browser = await chromium.launch({
-            channel: 'chrome',
-            args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
-        });
+        let lastError = null;
+        for (const executablePath of candidates) {
+            if (!fs.existsSync(executablePath)) continue;
+            try {
+                browser = await chromium.launch({ executablePath: executablePath, args: launchArgs });
+                break;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        if (!browser) {
+            try {
+                browser = await chromium.launch({ channel: 'chrome', args: launchArgs });
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        if (!browser) throw lastError || new Error('no Chrome to drive');
         const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
         page.on('console', (message) => {
             if (message.type() === 'error') errors.push(message.text());
@@ -100,7 +88,7 @@ async function main() {
             (args) => {
                 const loading = document.querySelector(args.loading);
                 const text = document.body ? document.body.innerText : '';
-                if (args.failure.test(text)) return true;
+                if (new RegExp(args.failure).test(text)) return true;
                 return !loading;
             },
             { loading: signal.loading, failure: signal.failure.source },

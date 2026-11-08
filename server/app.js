@@ -23,7 +23,7 @@ function createApp(opts = {}) {
     app.set('trust proxy', config.trustProxy);
     app.use(helmet({ contentSecurityPolicy: { directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://openvibe.network'],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'https://openvibe.network'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://openvibe.network', 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https://openvibe.network'],
@@ -31,6 +31,7 @@ function createApp(opts = {}) {
         frameSrc: ["'self'"],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
+        workerSrc: ["'self'", 'blob:'],
         baseUri: ["'self'"],
         formAction: ["'self'", 'https://openvibe.network'],
     } }, crossOriginEmbedderPolicy: false, referrerPolicy: { policy: 'strict-origin-when-cross-origin' } }));

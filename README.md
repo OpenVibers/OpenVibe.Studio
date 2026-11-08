@@ -68,3 +68,9 @@ per app keeps the same contract, so a base can be swapped:
 
 The service is MIT licensed ([LICENSE](LICENSE)). The apps keep their own licences, and the
 attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
+
+<!-- versions:start -->
+- openvibe-contracts: v0.348.0
+- openvibe-sdk: v0.101.0
+- openvibe-shared: v4.156.0
+<!-- versions:end -->

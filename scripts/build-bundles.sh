@@ -31,6 +31,11 @@ build_photocraft() {
   mkdir -p "$VENDOR/photocraft/unpacked"
   unzip -q dist/release/photocraft-web-*.zip -d "$VENDOR/photocraft/unpacked"
   cp -R "$VENDOR/photocraft/unpacked"/photocraft-web-*/. "$ARTIFACTS/photo/"
+  # Upstream's web package puts snippets/ at the root while app/photocraft-web.js imports ./snippets/… from app/, so the
+  # app never starts (404s; upstream issues #10017/#10248). Measured fix from the Studio due diligence: a copy in app/.
+  if [ -d "$ARTIFACTS/photo/snippets" ] && [ -d "$ARTIFACTS/photo/app" ] && [ ! -d "$ARTIFACTS/photo/app/snippets" ]; then
+    cp -R "$ARTIFACTS/photo/snippets" "$ARTIFACTS/photo/app/snippets"
+  fi
   keep_docs "$VENDOR/photocraft" "$ARTIFACTS/photo"
 }
 

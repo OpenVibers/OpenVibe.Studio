@@ -23,11 +23,11 @@ function createApp(opts = {}) {
     app.set('trust proxy', config.trustProxy);
     app.use(helmet({ contentSecurityPolicy: { directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'https://openvibe.network'],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'https://openvibe.network', 'https://static.cloudflareinsights.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://openvibe.network', 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https://openvibe.network'],
-        connectSrc: ["'self'", 'https://openvibe.network', 'https://openvibe.download', 'https://openvibe.pics'],
+        connectSrc: ["'self'", 'https://openvibe.network', 'https://openvibe.download', 'https://openvibe.pics', 'https://cloudflareinsights.com'],
         frameSrc: ["'self'"],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],

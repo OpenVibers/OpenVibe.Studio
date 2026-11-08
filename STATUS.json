@@ -1,0 +1,95 @@
+{
+  "repository": "OpenVibers/OpenVibe.Studio",
+  "stage": "beta",
+  "code": true,
+  "product": "Photo and Light, the creative apps on the OpenVibe network",
+  "runtime": "node 22, Express, the OpenVibe Shared shell and the openvibe-sdk SSO client; the apps themselves are Rust compiled to WebAssembly (Trunk for PhotoCraft, cargo xtask web for LightCraft) and served as static bundles",
+  "port": 5155,
+  "drill_port": 15155,
+  "domain": "openvibe.studio",
+  "contracts": "openvibe-contracts v0.346.0, openvibe-sdk v0.101.0, openvibe-shared v4.156.0",
+  "capabilities": [
+    "studio.apps.list",
+    "studio.files.list",
+    "studio.file.open",
+    "studio.file.save"
+  ],
+  "deployed": false,
+  "deployment": "Not deployed in this pull request. openvibe.studio stays parked until the owner launches it; the service listens on 127.0.0.1:5155 and the drill port is 15155. The bundles are built by the bundles workflow and fetched by the deploy by tag and checksum; no bundle is kept in git.",
+  "bases": [
+    {
+      "id": "photo",
+      "name": "PhotoCraft",
+      "repository": "https://github.com/storytold/photocraft",
+      "tag": "v0.21.0",
+      "licence": "MIT OR Apache-2.0",
+      "licence_files": [
+        "LICENSE-MIT",
+        "LICENSE-APACHE",
+        "NOTICE",
+        "ATTRIBUTION.md"
+      ],
+      "built_by": "our CI (Rust stable, wasm32-unknown-unknown, Trunk 0.21.14)",
+      "why": "the published web release archive does not start, so the build is made from the pinned tag and checked by a first-frame smoke test",
+      "adapter": "server/adapters/photo.js",
+      "capabilities": {
+        "open": true,
+        "save": false,
+        "commands": false
+      }
+    },
+    {
+      "id": "light",
+      "name": "LightCraft",
+      "repository": "https://github.com/storytold/lightcraft",
+      "tag": "v0.19.0",
+      "licence": "MIT OR Apache-2.0",
+      "licence_files": [
+        "LICENSE-MIT",
+        "LICENSE-APACHE",
+        "NOTICE",
+        "ATTRIBUTION.md",
+        "OFL-biz-ud-pgothic.txt",
+        "OFL-noto-sans-thai.txt"
+      ],
+      "built_by": "our CI (Rust stable, wasm32-unknown-unknown, cargo xtask web, wasm-bindgen 0.2.129)",
+      "why": "its web build works and speaks the documented host bridge, so files can be opened and exports handed over",
+      "adapter": "server/adapters/light.js",
+      "capabilities": {
+        "open": true,
+        "save": true,
+        "commands": true
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "name": "Cut (FilmCraft)",
+      "reason": "desktop and agent only; not part of Studio v0"
+    }
+  ],
+  "features": [
+    "one service for both apps, modelled on OpenVibe.Computer: the Shared navbar, the sign-in, STATUS.json and a pinned security workflow",
+    "the apps are served at /photo and /light inside our own layer: the navbar sits outside the app frame",
+    "one adapter per app with the same contract (open(file), save(), commands()), so a base can be swapped",
+    "Open from OpenVibe: the files a person owns in OpenVibe.Download and the pictures in OpenVibe.Pics",
+    "Save to OpenVibe: an export goes to the person's OpenVibe.Download drive (start, parts, complete)",
+    "the headers the WebAssembly builds need: application/wasm, no-cache on the loader, immutable on the hashed parts, no COOP/COEP (the builds are not cross-origin isolated and do not need it)",
+    "a build smoke test that fails the build unless the app reaches its first frame in headless Chrome",
+    "the home states the measured limits, credits each upstream project and links its licence"
+  ],
+  "limits_measured": [
+    "LightCraft reaches its first frame in about 2.5 s at 1280 px and 0.6 s at 390 px; PhotoCraft in about 1.3 s once its loader path is right",
+    "a 4 GB Photoshop file passes PhotoCraft's cap but uses 2.7-3.0 GB of memory: a phone with 4 GB can run out of memory on big files",
+    "neither app works offline: there is no service worker",
+    "OpenVibe.Download has no route that hands a file's bytes to a person's token yet, so a file opens here only through a public share link"
+  ],
+  "tests": [
+    "the build smoke test (scripts/smoke.js, run by the bundles workflow)",
+    "the headers of the bundles (server/bundles.js)",
+    "the adapter contract with a fake app (test/adapters.test.js)",
+    "the sign-in gating of Save, the files listing and the page rendering (test/studio.test.js)",
+    "the OpenVibe.Download client (test/media.test.js)"
+  ],
+  "updated": "2026-11-08"
+}

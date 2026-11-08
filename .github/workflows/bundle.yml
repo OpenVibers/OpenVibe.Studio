@@ -1,0 +1,64 @@
+name: bundles
+# The app bundles are built here, from pinned upstream tags, and published as artifacts with a
+# checksum file. The deploy fetches them by tag and checksum; a bundle is never kept in git.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: check out PhotoCraft
+        uses: actions/checkout@v4
+        with:
+          repository: storytold/photocraft
+          ref: v0.21.0
+          path: vendor/photocraft
+      - name: check out LightCraft
+        uses: actions/checkout@v4
+        with:
+          repository: storytold/lightcraft
+          ref: v0.19.0
+          path: vendor/lightcraft
+      - name: rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: trunk
+        run: |
+          curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /usr/local/bin trunk
+          trunk --version
+      - name: wasm-bindgen
+        run: |
+          curl -fsSL https://github.com/rustwasm/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar -xz -C /tmp
+          sudo cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen* /usr/local/bin/
+          wasm-bindgen --version
+      - name: build the bundles
+        run: scripts/build-bundles.sh all
+      - name: smoke test PhotoCraft
+        run: node scripts/smoke.js --app photo --dir artifacts/photo
+      - name: smoke test LightCraft
+        run: node scripts/smoke.js --app light --dir artifacts/light
+      - name: checksums
+        run: |
+          cd artifacts
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > bundles.sha256
+          cat bundles.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: studio-bundles
+          path: |
+            artifacts/photo
+            artifacts/light
+            artifacts/bundles.sha256
+          retention-days: 30

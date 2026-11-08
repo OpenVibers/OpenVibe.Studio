@@ -1,0 +1,24 @@
+OpenVibe.Studio
+Copyright (c) 2026 OpenVibers
+
+This product includes software developed by the Storytold project:
+
+  PhotoCraft (https://github.com/storytold/photocraft), build v0.21.0
+  LightCraft (https://github.com/storytold/lightcraft), build v0.19.0
+
+Both are licensed under either of
+
+  the MIT License, or
+  the Apache License, Version 2.0
+
+at your option. The licence files of each build (LICENSE-MIT, LICENSE-APACHE,
+NOTICE and ATTRIBUTION.md) travel with the bundle and are listed in
+STATUS.json. The full attribution is in ATTRIBUTION.md.
+
+The LightCraft web module embeds two fonts under the SIL Open Font License
+1.1: BIZ UDPGothic (the interface face) and Noto Sans Thai (for Thai file
+names). Their licence texts travel with the bundle as OFL-biz-ud-pgothic.txt
+and OFL-noto-sans-thai.txt.
+
+The OpenVibe.Studio service itself (the code in this repository) is MIT
+licensed; see LICENSE.

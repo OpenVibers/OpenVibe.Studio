@@ -1,0 +1,89 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenVibe.Studio",
+    "version": "0.1.0",
+    "description": "Photo and Light: two open-source creative apps built from pinned release tags and served inside an OpenVibe account."
+  },
+  "servers": [
+    {
+      "url": "https://openvibe.studio"
+    }
+  ],
+  "paths": {
+    "/api/v1/studio/apps": {
+      "get": {
+        "summary": "The apps Studio serves, their capabilities and their commands.",
+        "responses": {
+          "200": {
+            "description": "The catalogue."
+          }
+        }
+      }
+    },
+    "/api/v1/studio/files": {
+      "get": {
+        "summary": "The files and pictures the signed-in person owns.",
+        "responses": {
+          "200": {
+            "description": "Files and pictures, with any source that failed."
+          },
+          "401": {
+            "description": "Sign in required."
+          }
+        }
+      }
+    },
+    "/api/v1/studio/files/{source}/{id}/bytes": {
+      "get": {
+        "summary": "The bytes of one file or picture.",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "download",
+                "pics"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file."
+          },
+          "401": {
+            "description": "Sign in required."
+          },
+          "501": {
+            "description": "The host has no byte route for a person's token."
+          }
+        }
+      }
+    },
+    "/api/v1/studio/save": {
+      "post": {
+        "summary": "Save a file to the person's OpenVibe.Download drive.",
+        "responses": {
+          "201": {
+            "description": "Saved."
+          },
+          "401": {
+            "description": "Sign in required."
+          }
+        }
+      }
+    }
+  }
+}

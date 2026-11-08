@@ -1,0 +1,27 @@
+[Unit]
+Description=OpenVibe.Studio — Photo and Light, the creative apps on the OpenVibe network.
+After=network.target
+Wants=openvibe-network.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/openvibe.studio
+EnvironmentFile=/etc/openvibe/studio.env
+Environment=NODE_ENV=production
+Environment=PORT=5155
+Environment=HOST=127.0.0.1
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node /opt/openvibe.studio/server/index.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

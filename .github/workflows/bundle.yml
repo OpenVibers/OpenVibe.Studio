@@ -1,15 +1,16 @@
 name: bundles
-# The app bundles are built here, from pinned upstream tags, and published as artifacts with a
-# checksum file. The deploy fetches them by tag and checksum; a bundle is never kept in git.
+# The app bundles are built here, from pinned upstream tags, checked by the first-frame smoke test
+# and published as a release the host can fetch without a GitHub account. A bundle is never kept
+# in git.
 on:
   push:
     branches: [main]
   pull_request:
     paths:
-      - "scripts/**"
+      - "scripts/build-bundles.sh"
+      - "scripts/smoke.js"
       - "server/bundle-files.js"
       - "server/bundles.js"
-      - ".github/workflows/bundle.yml"
   workflow_dispatch:
 permissions:
   contents: read
@@ -71,3 +72,41 @@ jobs:
             artifacts/light
             artifacts/bundles.sha256
           retention-days: 30
+
+  # On main the built bundles become a release the host fetches with curl: no GitHub account and
+  # no token are needed there. The assets of an existing release are replaced.
+  publish:
+    name: publish the bundles release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+      - uses: actions/download-artifact@v4
+        with:
+          name: studio-bundles
+          path: artifacts
+      - name: pack and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PHOTO_TAG="$(node -e "process.stdout.write(require('./server/adapters/photo').base.tag)")"
+          LIGHT_TAG="$(node -e "process.stdout.write(require('./server/adapters/light').base.tag)")"
+          RELEASE="bundles-${PHOTO_TAG}-${LIGHT_TAG}"
+          TARBALL="studio-bundles-${PHOTO_TAG}-${LIGHT_TAG}.tar.gz"
+          cd artifacts
+          tar -czf "$TARBALL" photo light
+          sha256sum "$TARBALL" > SHA256SUMS
+          cat SHA256SUMS
+          if gh release view "$RELEASE" >/dev/null 2>&1; then
+            echo "replacing the assets of $RELEASE"
+            gh release upload "$RELEASE" "$TARBALL" SHA256SUMS --clobber
+          else
+            gh release create "$RELEASE" "$TARBALL" SHA256SUMS --title "$RELEASE" --notes "The app bundles for PhotoCraft ${PHOTO_TAG} and LightCraft ${LIGHT_TAG}. Check SHA256SUMS before unpacking; scripts/fetch-bundles.sh does that on the host."
+          fi

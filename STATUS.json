@@ -15,7 +15,7 @@
     "studio.file.save"
   ],
   "deployed": false,
-  "deployment": "Not deployed in this pull request. openvibe.studio stays parked until the owner launches it; the service listens on 127.0.0.1:5155 and the drill port is 15155. The bundles are built by the bundles workflow and fetched by the deploy by tag and checksum; no bundle is kept in git.",
+  "deployment": "Not deployed in this pull request. openvibe.studio stays parked until the owner launches it; the service listens on 127.0.0.1:5155 and the drill port is 15155. The bundles are built by the bundles workflow on every push to main and published as the release bundles-<photo tag>-<light tag> with a SHA256SUMS file; scripts/fetch-bundles.sh fetches that release on the host with curl (no GitHub account), checks the sums and swaps the tree in one step. No bundle is kept in git.",
   "bases": [
     {
       "id": "photo",

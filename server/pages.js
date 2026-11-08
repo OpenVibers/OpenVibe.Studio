@@ -4,46 +4,40 @@ const { esc } = require('./html');
 const { send } = require('./layout');
 const { ADAPTERS } = require('./adapters');
 const { hasBundle } = require('./bundles');
-const { APPS, LIMITS } = require('./product');
+const { APPS } = require('./product');
 
 function createPages({ config, sso }) {
     const r = express.Router();
     const viewerOf = (req) => req.user || req.viewer || { kind: 'anonymous' };
 
-    const appCard = (app) => {
-        const limits = app.limits.map((limit) => '<li>' + esc(limit) + '</li>').join('');
-        return '<article class="app-card">' +
-            '<span class="eyebrow">' + esc(app.title) + '</span>' +
-            '<h3>' + esc(app.tagline) + '</h3>' +
-            '<p>' + esc(app.what) + '</p>' +
-            '<ul class="app-limits">' + limits + '</ul>' +
-            '<p class="app-licence">Licence: ' + esc(app.licence) + '. ' + esc(app.licenceNote) +
-            ' <a href="' + esc(app.upstream) + '" rel="noopener">Upstream project</a>.</p>' +
-            '<p><a class="button-primary" href="/' + esc(app.id) + '">Open ' + esc(app.title) + '</a></p>' +
-            '</article>';
-    };
+    // The home is short (Opus's design pass, 11-08): one promise, two apps with three features each, three plain notes,
+    // one credit line. The measured detail lives on each app's page and in the docs, not here.
+    const HOME_APPS = [
+        { id: 'photo', name: 'Photo', line: 'Layers, masks and retouching.', features: ['Layers and masks', 'Curves and adjustments', 'Opens PSD files'] },
+        { id: 'light', name: 'Light', line: 'Your photo library and RAW developer.', features: ['RAW files', 'Develop and presets', 'A library in your browser'] },
+    ];
+    const appCard = (app) => '<article class="app-card"><h3>' + esc(app.name) + '</h3><p>' + esc(app.line) + '</p>' +
+        '<ul class="app-features">' + app.features.map((f) => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
+        '<p><a class="button-primary" href="/' + esc(app.id) + '">Open ' + esc(app.name) + '</a></p></article>';
 
     r.get('/', (req, res) => {
         const viewer = viewerOf(req);
-        const cards = APPS.map(appCard).join('');
-        const limits = LIMITS.map((limit) => '<li>' + esc(limit) + '</li>').join('');
-        const licences = APPS.map((app) => '<li><strong>' + esc(app.title) + '</strong> — ' + esc(app.licence) +
-            '. <a href="' + esc(app.upstream) + '" rel="noopener">' + esc(app.upstream) + '</a>. ' + esc(app.licenceNote) + '</li>').join('');
+        const photo = APPS.find((x) => x.id === 'photo'), light = APPS.find((x) => x.id === 'light');
         const body = '<section class="hero"><div>' +
-            '<span class="eyebrow">PHOTO AND LIGHT</span>' +
-            '<h1>Two real creative apps on the OpenVibe network.</h1>' +
-            '<p>Photo is a layered photo editor. Light is a photo library and RAW developer. Both run in your browser as WebAssembly, both are built from pinned release tags by our own CI, and both sit inside your OpenVibe account.</p>' +
+            '<span class="eyebrow">OPENVIBE STUDIO</span>' +
+            '<h1>Edit photos right in your browser.</h1>' +
+            '<p>Photo for layers and retouching. Light for your library and RAW files. Free and open source, with your files on OpenVibe.</p>' +
             '<p><a class="button-primary" href="/photo">Open Photo</a> <a class="button-secondary" href="/light">Open Light</a></p>' +
             '</div></section>' +
-            '<section id="apps"><div class="section-heading"><div><span class="eyebrow">WHAT IS HERE</span><h2>The apps</h2></div>' +
-            '<p>Each app is an upstream open-source project. We build it from a pinned tag, serve it here, and keep its licence and attribution.</p></div>' +
-            '<div class="app-grid">' + cards + '</div></section>' +
-            '<section id="limits"><div class="section-heading"><div><span class="eyebrow">BEFORE YOU START</span><h2>Honest limits</h2></div>' +
-            '<p>Measured, not guessed.</p></div><ul class="limit-list">' + limits + '</ul></section>' +
-            '<section id="licences"><div class="section-heading"><div><span class="eyebrow">CREDIT</span><h2>Licences and attribution</h2></div></div>' +
-            '<ul class="limit-list">' + licences + '</ul>' +
-            '<p class="fine-print">OpenVibe.Studio itself is MIT licensed. The full attribution is on the <a href="/attribution">attribution page</a>.</p></section>';
-        send(res, { title: 'Photo and Light, the creative apps on OpenVibe', body: body, viewer: viewer, config: config, path: '/' });
+            '<section id="apps"><div class="app-grid">' + HOME_APPS.map(appCard).join('') + '</div></section>' +
+            '<section id="limits"><h2>Good to know</h2><ul class="limit-list">' +
+            '<li>The first open takes a few seconds while the app loads.</li>' +
+            '<li>On a phone with 4 GB of memory, very large files can run out of memory.</li>' +
+            '<li>It needs a connection: there is no offline mode yet. Video editing comes later.</li></ul></section>' +
+            '<section id="licences"><p class="fine-print">Photo is <a href="' + esc(photo.upstream) + '" rel="noopener">PhotoCraft</a> and Light is ' +
+            '<a href="' + esc(light.upstream) + '" rel="noopener">LightCraft</a>, open-source apps (' + esc(photo.licence) + ') that we build from their releases. ' +
+            '<a href="/attribution">Attribution</a></p></section>';
+        send(res, { title: 'Studio: edit photos in your browser', body: body, viewer: viewer, config: config, path: '/' });
     });
 
     const appPage = (adapter, viewer) => {

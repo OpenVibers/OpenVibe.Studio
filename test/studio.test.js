@@ -74,11 +74,11 @@ test('the home names both apps, their limits and their licences', async (t) => {
     const html = await res.text();
     assert.match(html, /PhotoCraft/);
     assert.match(html, /LightCraft/);
-    assert.match(html, /Honest limits/);
+    assert.match(html, /Good to know/);
     assert.match(html, /MIT OR Apache-2\.0/);
     assert.match(html, /github\.com\/storytold\/photocraft/);
     assert.match(html, /github\.com\/storytold\/lightcraft/);
-    assert.match(html, /Cut \(FilmCraft\) is not part of Studio v0/);
+    assert.match(html, /Video editing comes later/);
     assert.match(html, /4 GB/);
     assert.doesNotMatch(html, /<img/);
 });

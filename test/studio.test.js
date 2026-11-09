@@ -182,7 +182,26 @@ test('the app catalogue, the attribution page and the small endpoints answer', a
     assert.match(attributionHtml, /storytold\/lightcraft/);
     assert.match(attributionHtml, /v0\.19\.0/);
     assert.equal((await fetch(s.base + '/api/health')).status, 200);
-    assert.equal((await fetch(s.base + '/llms.txt')).status, 200);
+    const llms = await fetch(s.base + '/llms.txt');
+    assert.equal(llms.status, 200);
+    const llmsText = await llms.text();
+    assert.ok(llmsText.includes('(/llms-full.txt)') && llmsText.includes('(/.well-known/agent.json)'), 'llms.txt names the full text and the agent descriptor');
+    const full = await fetch(s.base + '/llms-full.txt');
+    assert.equal(full.status, 200);
+    assert.match(full.headers.get('content-type'), /^text\/plain/);
+    const fullText = await full.text();
+    assert.ok(fullText.startsWith('# OpenVibe.Studio\n'), 'llms-full.txt opens with the site heading');
+    assert.ok(fullText.length > 500, `llms-full.txt carries the pages (${fullText.length} characters)`);
+    for (const page of ['/photo', '/light', '/attribution']) assert.ok(fullText.includes(`URL: https://openvibe.studio${page}`), `llms-full.txt lists ${page}`);
+    assert.ok(fullText.includes('PhotoCraft') && fullText.includes('LightCraft'), 'and the apps it serves');
+    const agent = await fetch(s.base + '/.well-known/agent.json');
+    assert.equal(agent.status, 200);
+    assert.match(agent.headers.get('content-type'), /^application\/json/);
+    const manifest = await agent.json();
+    assert.equal(manifest.id, 'studio');
+    assert.equal(manifest.home, 'https://openvibe.studio');
+    assert.equal(manifest.llmsFull, 'https://openvibe.studio/llms-full.txt');
+    assert.equal(manifest.openapi, 'https://openvibe.studio/openapi.json');
     assert.equal((await fetch(s.base + '/robots.txt')).status, 200);
     { const r = await fetch(s.base + '/release.json'); assert.equal(r.status, 200, 'the navbar release watch polls /release.json'); assert.equal((await r.json()).service, 'studio'); }
     assert.equal((await fetch(s.base + '/nope')).status, 404);

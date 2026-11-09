@@ -20,6 +20,15 @@ function createPages({ config, sso }) {
         '<ul class="app-features">' + app.features.map((f) => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
         '<p><a class="button-primary" href="/' + esc(app.id) + '">Open ' + esc(app.name) + '</a></p></article>';
 
+    r.get('/image-tools', (req, res) => {
+        const picture = /^[2-9a-km-zA-HJ-NP-Z]{8}$/.test(String(req.query.picture || '')) ? String(req.query.picture) : '';
+        send(res, { title: 'Image tools', viewer: viewerOf(req), config, path: '/image-tools', body:
+            '<h1>Edit a picture with AI</h1><p>Make an edited copy on Pics. The original stays unchanged and the new picture starts unlisted, like every upload.</p>' +
+            '<form id="image-tools"><label>Picture slug <input name="picture" required value="' + esc(picture) + '"></label>' +
+            '<label>Operation <select name="operation"><option value="upscale">Upscale</option><option value="remove-background">Remove background</option><option value="restyle">Restyle</option></select></label>' +
+            '<label>Style instructions <textarea name="prompt" maxlength="1000"></textarea></label><button type="submit">Make edited copy</button></form>' +
+            '<p id="image-tools-status" role="status"></p><script src="/js/image-tools.js" defer></script>' });
+    });
     r.get('/', (req, res) => {
         const viewer = viewerOf(req);
         const photo = APPS.find((x) => x.id === 'photo'), light = APPS.find((x) => x.id === 'light');

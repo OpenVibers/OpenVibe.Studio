@@ -74,3 +74,17 @@ attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 - openvibe-sdk: v0.106.0
 - openvibe-shared: v4.163.0
 <!-- versions:end -->
+
+### Pics image tools
+
+`/image-tools?picture=<slug>` opens an edit of a Pics picture. The authenticated
+`POST /api/v1/studio/images/edit` API accepts `{picture, operation, prompt?}`;
+operation is `upscale`, `remove-background`, or `restyle`. It reads authorized Pics
+bytes and saves a separate private picture through Pics' re-encoding pipeline.
+
+Deployment requires `STUDIO_IMAGE_WORKER_URL`, an operator-controlled image worker
+with `POST /edit` accepting `{operation, prompt, image: {mime_type, base64}}` and
+returning JPEG, PNG or WebP bytes. No person token is sent to that worker; it receives
+only the selected picture. The worker is not supplied by this PR. Without it the
+capability endpoint reports unavailable, the UI disables submission and the API
+returns 503. Tests use an in-process fake; no model calls or spending occurred.

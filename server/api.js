@@ -57,7 +57,7 @@ function createApi({ sso, media, pics }) {
         if (!value) return;
         const source = req.params.source;
         const id = req.params.id;
-        const file = source === 'pics' ? await pics.bytes(id) : await media.downloadBytes(value, id);
+        const file = source === 'pics' ? await pics.bytes(id, value) : await media.downloadBytes(value, id);
         const name = String(file.name || 'file').replace(/[^A-Za-z0-9._-]+/g, '_');
         res.set('Content-Type', file.contentType || 'application/octet-stream');
         res.set('Content-Disposition', 'attachment; filename="' + name + '"');

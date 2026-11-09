@@ -71,8 +71,8 @@ attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 <!-- versions:start -->
 - openvibe-contracts: v0.348.0
-- openvibe-sdk: v0.106.0
-- openvibe-shared: v4.163.0
+- openvibe-sdk: v0.123.0
+- openvibe-shared: v4.173.0
 <!-- versions:end -->
 
 ### Pics image tools

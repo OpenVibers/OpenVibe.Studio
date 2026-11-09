@@ -8,7 +8,24 @@ const { createPages } = require('./pages');
 const { createBundleFiles } = require('./bundle-files');
 const { createMediaClient } = require('./openvibe/media');
 const { createPicsClient } = require('./openvibe/pics');
+const { APPS } = require('./product');
+const seo = require('openvibe-shared/seo');
+const agentDescriptor = require('./agent-descriptor');
 const configLib = require('./config');
+
+const SITE_NAME = 'OpenVibe.Studio';
+const SUMMARY = 'Photo and Light: two open-source creative apps (PhotoCraft, LightCraft) built from pinned release tags and served inside an OpenVibe account.';
+const appText = (id) => {
+    const app = APPS.find((one) => one.id === id);
+    return app ? `${app.tagline} ${app.what}` : '';
+};
+// The public pages, for /llms-full.txt: the same pages llms.txt and the sitemap list.
+const PUBLIC_PAGES = [
+    { title: SITE_NAME, url: '/', text: SUMMARY },
+    { title: 'Photo', url: '/photo', text: appText('photo') },
+    { title: 'Light', url: '/light', text: appText('light') },
+    { title: 'Attribution', url: '/attribution', text: 'The open-source projects Studio hosts, their licences, upstream repositories and the licence files kept with each build.' },
+];
 
 function createApp(opts = {}) {
     const config = opts.config || configLib.load();
@@ -48,7 +65,14 @@ function createApp(opts = {}) {
         '<url><loc>https://openvibe.studio/light</loc></url><url><loc>https://openvibe.studio/attribution</loc></url></urlset>'));
     { const legal = require('openvibe-shared/legal'); app.get(legal.PATHS, legal.handler({ id: 'studio', service: 'studio', host: 'openvibe.studio', name: 'OpenVibe.Studio', profile: 'hosting' })); }
     app.get('/llms.txt', (_req, res) => res.type('text/plain').send(
-        '# OpenVibe.Studio\n\nPhoto and Light: two open-source creative apps (PhotoCraft, LightCraft) built from pinned release tags and served inside an OpenVibe account.\n\n- [Home](/)\n- [Photo](/photo)\n- [Light](/light)\n- [Attribution](/attribution)\n- [API docs](/openapi.json)\n'));
+        '# OpenVibe.Studio\n\n' + SUMMARY + '\n\n- [Home](/)\n- [Photo](/photo)\n- [Light](/light)\n- [Attribution](/attribution)\n- [API docs](/openapi.json)\n- [Full text for language models](/llms-full.txt)\n- [Agent descriptor](/.well-known/agent.json)\n'));
+    // The same pages with their text, for a model that wants the site in one read (llms-full.txt, llmstxt.org).
+    app.get('/llms-full.txt', (_req, res) => res.type('text/plain').send(seo.llmsFull({
+        site: SITE_NAME, summary: SUMMARY, base: 'https://openvibe.studio',
+        sections: [{ title: 'Pages', pages: PUBLIC_PAGES }],
+    })));
+    // What openvibe.studio tells an agent about itself (SEO-2, openvibe-shared/agent-layer's shape).
+    app.get('/.well-known/agent.json', (_req, res) => res.set('Cache-Control', 'public, max-age=3600').json(agentDescriptor));
     app.get('/openapi.json', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'openapi.json')));
     app.use('/api/v1/studio', createApi({ sso, media, pics }));
     // GET /release.json (ADR-016): the navbar's release watch polls it so open tabs learn of a new release (the 11-09

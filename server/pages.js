@@ -24,7 +24,6 @@ function createPages({ config, sso }) {
         const viewer = viewerOf(req);
         const photo = APPS.find((x) => x.id === 'photo'), light = APPS.find((x) => x.id === 'light');
         const body = '<section class="hero"><div>' +
-            '<span class="eyebrow">OPENVIBE STUDIO</span>' +
             '<h1>Edit photos right in your browser.</h1>' +
             '<p>Photo for layers and retouching. Light for your library and RAW files. Free and open source, with your files on OpenVibe.</p>' +
             '</div></section>' +
@@ -47,7 +46,6 @@ function createPages({ config, sso }) {
         const saveNote = adapter.capabilities.save ? '' :
             'Save to OpenVibe is not available for this app: its browser build has no scriptable export, so export from the app and the file downloads to your browser.';
         const head = '<section class="app-head"><div>' +
-            '<span class="eyebrow">' + esc(adapter.title) + '</span>' +
             '<h1>' + esc(adapter.title) + '</h1>' +
             '<p>Build ' + esc(adapter.base.tag) + ' of ' + esc(adapter.base.repository.replace('https://github.com/', '')) +
             ', built by ' + esc(adapter.base.builtBy) + '. Licence: ' + esc(adapter.base.licence) + '.</p>' +
@@ -91,7 +89,7 @@ function createPages({ config, sso }) {
             '. Built by ' + esc(adapter.base.builtBy) + ' from <a href="' + esc(adapter.base.repository) + '" rel="noopener">' + esc(adapter.base.repository) +
             '</a> at tag ' + esc(adapter.base.tag) + '. Licence files kept with the build: ' +
             esc(adapter.base.licenceFiles.join(', ')) + '.</li>').join('');
-        const body = '<section class="page-intro"><span class="eyebrow">CREDIT</span><h1>Attribution</h1>' +
+        const body = '<section class="page-intro"><h1>Attribution</h1>' +
             '<p>Studio hosts builds of open-source projects. Each one keeps its own licence and its own attribution files; here they are in full.</p></section>' +
             '<ul class="limit-list">' + rows + '</ul>' +
             '<p class="fine-print">OpenVibe.Studio is MIT licensed. The apps are the work of their own authors and are used under their own terms; ' +

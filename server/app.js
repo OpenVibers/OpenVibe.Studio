@@ -51,6 +51,9 @@ function createApp(opts = {}) {
         '# OpenVibe.Studio\n\nPhoto and Light: two open-source creative apps (PhotoCraft, LightCraft) built from pinned release tags and served inside an OpenVibe account.\n\n- [Home](/)\n- [Photo](/photo)\n- [Light](/light)\n- [Attribution](/attribution)\n- [API docs](/openapi.json)\n'));
     app.get('/openapi.json', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'openapi.json')));
     app.use('/api/v1/studio', createApi({ sso, media, pics }));
+    // GET /release.json (ADR-016): the navbar's release watch polls it so open tabs learn of a new release (the 11-09
+    // browser sweep found it answering 404 here).
+    require('openvibe-shared/release').createRelease({ service: 'studio', root: path.join(__dirname, '..') }).mount(app);
     app.use('/shared', require('openvibe-shared/serve').handler());
     app.use('/apps', createBundleFiles({ root: config.bundleRoot }));
     app.use(express.static(path.join(__dirname, '..', 'public'), { index: false, maxAge: '1h' }));

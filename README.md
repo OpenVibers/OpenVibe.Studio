@@ -72,5 +72,5 @@ attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 <!-- versions:start -->
 - openvibe-contracts: v0.348.0
 - openvibe-sdk: v0.101.0
-- openvibe-shared: v4.157.0
+- openvibe-shared: v4.159.0
 <!-- versions:end -->

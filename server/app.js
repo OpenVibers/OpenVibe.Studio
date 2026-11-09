@@ -44,7 +44,7 @@ function createApp(opts = {}) {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://openvibe.network', 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https://openvibe.network'],
-        connectSrc: ["'self'", 'https://openvibe.network', 'https://openvibe.download', 'https://openvibe.pics', 'https://cloudflareinsights.com'],
+        connectSrc: ["'self'", 'https://openvibe.network', 'https://openvibe.download', 'https://openvibe.pics', 'https://cloudflareinsights.com', 'https://openvibe.events'],
         frameSrc: ["'self'"],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],

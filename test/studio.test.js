@@ -184,5 +184,6 @@ test('the app catalogue, the attribution page and the small endpoints answer', a
     assert.equal((await fetch(s.base + '/api/health')).status, 200);
     assert.equal((await fetch(s.base + '/llms.txt')).status, 200);
     assert.equal((await fetch(s.base + '/robots.txt')).status, 200);
+    { const r = await fetch(s.base + '/release.json'); assert.equal(r.status, 200, 'the navbar release watch polls /release.json'); assert.equal((await r.json()).service, 'studio'); }
     assert.equal((await fetch(s.base + '/nope')).status, 404);
 });

@@ -23,7 +23,7 @@ function createPicsClient({ baseUrl, fetchImpl = globalThis.fetch }) {
         id: image.slug || image.id || null,
         slug: image.slug || null,
         name: image.name || image.title || image.slug || 'image',
-        contentType: image.content_type || 'image/jpeg',
+        contentType: image.mime_type || image.content_type || 'image/jpeg',
         direct: (image.links && image.links.direct) || null,
         page: (image.links && image.links.page) || null,
         thumb: (image.links && image.links.thumb) || null,
@@ -36,14 +36,17 @@ function createPicsClient({ baseUrl, fetchImpl = globalThis.fetch }) {
             const images = Array.isArray(data.images) ? data.images : (Array.isArray(data) ? data : []);
             return images.map(wire);
         },
-        async bytes(slug) {
-            const data = await request('/images/' + encodeURIComponent(slug));
+        async bytes(slug, token) {
+            const data = await request('/images/' + encodeURIComponent(slug), token);
             const image = wire(data.image || data);
-            const direct = image.direct || (image.slug ? root + '/i/' + image.slug : null);
-            if (!direct) throw new StudioError(404, 'pics.image_not_found', 'No such picture in OpenVibe.Pics.');
-            const res = await fetchImpl(direct, { headers: { accept: '*/*' } });
-            if (!res.ok) throw new StudioError(res.status, 'pics.bytes.unavailable', 'OpenVibe.Pics returned ' + res.status + ' for the picture.');
+            const res = await fetchImpl(root + '/api/v1/images/' + encodeURIComponent(slug) + '/bytes', { redirect: 'error', headers: { authorization: 'Bearer ' + token } });
+            if (!res.ok) throw new StudioError(res.status, 'pics.bytes.unavailable', 'This picture is unavailable.');
             return { name: image.name, contentType: image.contentType, bytes: Buffer.from(await res.arrayBuffer()) };
+        },
+        async save(token, bytes, contentType, title) {
+            const res = await fetchImpl(root + '/api/v1/images', { method: 'POST', redirect: 'error', headers: { authorization: 'Bearer ' + token, 'content-type': contentType, 'x-title': encodeURIComponent(title) }, body: bytes });
+            if (!res.ok) throw new StudioError(res.status, 'pics.save.failed', 'The edited picture could not be saved.');
+            return res.json();
         },
     };
 }

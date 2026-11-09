@@ -74,6 +74,7 @@ function createApp(opts = {}) {
     // What openvibe.studio tells an agent about itself (SEO-2, openvibe-shared/agent-layer's shape).
     app.get('/.well-known/agent.json', (_req, res) => res.set('Cache-Control', 'public, max-age=3600').json(agentDescriptor));
     app.get('/openapi.json', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'openapi.json')));
+    app.use('/api/v1/studio', require('./image-tools').createImageTools({ config, sso, pics, fetchImpl: opts.fetchImpl }));
     app.use('/api/v1/studio', createApi({ sso, media, pics }));
     // GET /release.json (ADR-016): the navbar's release watch polls it so open tabs learn of a new release (the 11-09
     // browser sweep found it answering 404 here).

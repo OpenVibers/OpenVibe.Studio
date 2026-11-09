@@ -15,6 +15,7 @@ function load(env = process.env) {
         networkUrl,
         networkInternalUrl: trim(env.OV_NETWORK_INTERNAL_URL || 'http://127.0.0.1:4000'),
         downloadUrl: trim(env.OV_DOWNLOAD_URL || 'https://openvibe.download'),
+        imageWorkerUrl: trim(env.STUDIO_IMAGE_WORKER_URL || ''),
         picsUrl: trim(env.OV_PICS_URL || 'https://openvibe.pics'),
         clientId: env.OV_OAUTH_CLIENT_ID || 'studio',
         clientSecret: env.OV_OAUTH_CLIENT_SECRET || '',

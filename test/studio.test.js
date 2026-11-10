@@ -69,7 +69,12 @@ const fakeVideo = {
     publish: async (token, input) => {
         fakeVideo.calls.push(['publish', token, input]);
         if (input.media !== 'vup_ok') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.media_not_found', detail: 'no such video' });
-        return { video: { id: 'vup_copy', status: 'processing', url: '/watch?v=copycopycop', watch_url: 'https://openvibe.video/watch?v=copycopycop' } };
+        return { cut: { id: 'vcut_01J0000000000000000000001', status: 'queued', mode: 'trim' } };
+    },
+    cut: async (token, id) => {
+        fakeVideo.calls.push(['cut', token, id]);
+        if (id !== 'vcut_01J0000000000000000000001') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.cut_not_found', detail: 'no such edit' });
+        return { cut: { id, status: 'done', result: { watch_url: 'https://openvibe.video/watch?v=copycopycop' } } };
     },
 };
 
@@ -254,6 +259,12 @@ test('Edit in Studio is a signed-in hand-off: the source decides who may read th
     assert.equal(video.status, 200);
     const videoHtml = await video.text();
     assert.match(videoHtml, /data-studio-edit-video/);
+    assert.match(videoHtml, /<h1>Trim and publish<\/h1>/);
+    assert.match(videoHtml, /Set start here/);
+    assert.match(videoHtml, /Set end here/);
+    assert.match(videoHtml, /Use this frame as the cover/);
+    assert.match(videoHtml, /id="edit-start"/);
+    assert.match(videoHtml, /id="edit-end"/);
     assert.match(videoHtml, /From <a href="https:\/\/openvibe\.video\/watch\?v=abcdefghijk"/);
     assert.match(videoHtml, /OpenVibe\.Video/);
     assert.match(videoHtml, /Publish on Video/);
@@ -289,18 +300,22 @@ test('the video preview and Publish on Video use the person token, and refuse a 
     const publish = await fetch(s.base + '/api/v1/studio/publish', {
         method: 'POST',
         headers: { cookie: 'ov_token=person-a', 'content-type': 'application/json', origin: 'http://studio.test' },
-        body: JSON.stringify({ media: 'vup_ok', title: 'A copy', visibility: 'private' }),
+        body: JSON.stringify({ media: 'vup_ok', start: 1, end: 4, cover: 2.5, title: 'A copy', visibility: 'private' }),
     });
     const publishText = await publish.text();
     assert.equal(publish.status, 202, publishText);
     const out = JSON.parse(publishText);
-    assert.equal(out.video.watch_url, 'https://openvibe.video/watch?v=copycopycop');
-    assert.deepEqual(fakeVideo.calls.find((call) => call[0] === 'publish').slice(1), ['person-a', { media: 'vup_ok', title: 'A copy', visibility: 'private' }]);
+    assert.equal(out.cut.id, 'vcut_01J0000000000000000000001');
+    assert.equal(out.cut.status, 'queued');
+    assert.deepEqual(fakeVideo.calls.find((call) => call[0] === 'publish').slice(1), ['person-a', { media: 'vup_ok', start: 1, end: 4, cover: 2.5, title: 'A copy', visibility: 'private' }]);
+    const poll = await fetch(s.base + '/api/v1/studio/publish/vcut_01J0000000000000000000001', { headers: { cookie: 'ov_token=person-a' } });
+    assert.equal(poll.status, 200);
+    assert.equal((await poll.json()).cut.result.watch_url, 'https://openvibe.video/watch?v=copycopycop');
 
     const hidden = await fetch(s.base + '/api/v1/studio/publish', {
         method: 'POST',
         headers: { cookie: 'ov_token=person-a', 'content-type': 'application/json', origin: 'http://studio.test' },
-        body: JSON.stringify({ media: 'vup_private' }),
+        body: JSON.stringify({ media: 'vup_private', start: 0, end: 2 }),
     });
     assert.equal(hidden.status, 404);
 });

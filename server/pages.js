@@ -92,27 +92,51 @@ function createPages({ config, sso, pics, video }) {
             '" data-studio-signed-in="' + (viewer.kind === 'user' ? 'true' : 'false') + '"' + openAttrs + '>' + head + files + frame + '</section>' + scripts;
     };
 
-    /** The Studio side of "Edit in Studio": a video from OpenVibe.Video, loaded in a plain editor shell. */
+    const clock = (seconds) => {
+        const n = Math.max(0, Math.round(Number(seconds) || 0));
+        return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0');
+    };
+    const spoken = (seconds) => {
+        const n = Math.max(0, Math.round(Number(seconds) || 0));
+        return n >= 60 ? Math.floor(n / 60) + ' min' + (n % 60 ? ' ' + (n % 60) + ' s' : '') : n + ' s';
+    };
+
+    /** Studio's video tools: trim a range, take a cover frame, title it, and publish it back on Video. */
     const videoEditor = (media, source) => {
-        const duration = Number(media.duration_seconds) > 0 ? Math.round(Number(media.duration_seconds)) + ' s' : 'a video';
-        const preview = '<div class="app-frame-wrap"><video class="app-frame" controls preload="metadata" playsinline src="/api/v1/studio/media/' +
+        const duration = Number(media.duration_seconds) > 0 ? Number(media.duration_seconds) : 0;
+        const durationText = duration > 0 ? clock(duration) : 'the whole video';
+        const preview = '<div class="app-frame-wrap"><video class="app-frame" data-studio-video controls preload="metadata" playsinline src="/api/v1/studio/media/' +
             encodeURIComponent(media.id) + '/bytes"></video></div>';
+        const sourceLine = '<p class="fine-print app-source">From <a href="' + esc(source.url) + '" rel="noopener">' + esc(source.name) +
+            '</a> · ' + esc(media.title) + ' · ' + esc(durationText) + '</p>';
         if (!media.can_edit) {
-            return '<section class="page-intro"><h1>Edit in Studio</h1><p class="fine-print app-source">From <a href="' + esc(source.url) +
-                '" rel="noopener">' + esc(source.name) + '</a> · ' + esc(media.title) + '</p></section>' +
+            return '<section class="page-intro"><h1>Trim and publish</h1>' + sourceLine + '</section>' +
                 '<p class="app-status">You can watch this video here, but only its owner can edit it. <a class="ovk-btn ovk-btn--quiet" href="' +
                 esc(source.url) + '" rel="noopener">Open on Video</a></p>' + preview;
         }
-        const form = media.status === 'ready' ? '<form data-studio-publish data-media="' + esc(media.id) + '">' +
-            '<label>Title <input name="title" type="text" maxlength="120" required value="' + esc(media.title) + '"></label>' +
-            '<label>Who can see the copy <select name="visibility"><option value="private" selected>Only you</option><option value="unlisted">Only people with the link</option><option value="public">Anyone</option></select></label>' +
-            '<p class="fine-print">Publishing makes a new copy on OpenVibe.Video. The original stays as it is; the copy starts processing there.</p>' +
+        if (media.status !== 'ready') {
+            return '<section class="page-intro"><h1>Trim and publish</h1>' + sourceLine + '</section>' +
+                '<p class="app-status">The video is still processing on OpenVibe.Video. Reload this page when it is ready. <a href="' +
+                esc(source.url) + '">Open on Video</a></p>' + preview;
+        }
+        const form = '<form data-studio-publish data-media="' + esc(media.id) + '" data-duration="' + esc(duration) + '">' +
+            '<p class="fine-print">At <span data-role="time">0:00</span> · use the player controls or the fields below.</p>' +
+            '<fieldset class="app-trim"><legend>Keep a range</legend>' +
+            '<label for="edit-start">Start (seconds)</label> <input id="edit-start" name="start" type="number" min="0" step="0.1" value="0"> ' +
+            '<button class="ovk-btn ovk-btn--quiet" type="button" data-set-start>Set start here</button>' +
+            '<label for="edit-end">End (seconds)</label> <input id="edit-end" name="end" type="number" min="0" step="0.1" value="' + esc(duration.toFixed(2)) + '"> ' +
+            '<button class="ovk-btn ovk-btn--quiet" type="button" data-set-end>Set end here</button>' +
+            '<p class="fine-print" data-role="range">Keeps ' + clock(0) + ' to ' + clock(duration) + ' (' + spoken(duration) + ')</p></fieldset>' +
+            '<p><button class="ovk-btn ovk-btn--quiet" type="button" data-set-cover>Use this frame as the cover</button> ' +
+            '<span class="fine-print" data-role="cover">Cover: the first frame</span></p>' +
+            '<label for="edit-title">Title</label> <input id="edit-title" name="title" type="text" maxlength="120" required value="' + esc(media.title) + '">' +
+            '<label for="edit-visibility">Who can see the copy</label> <select id="edit-visibility" name="visibility">' +
+            '<option value="private" selected>Only you</option><option value="unlisted">Only people with the link</option><option value="public">Anyone</option></select>' +
+            '<p class="fine-print">Publishing makes a new copy on OpenVibe.Video through its cuts service. The original stays as it is; the copy starts processing there.</p>' +
             '<p><button class="ovk-btn ovk-btn--primary" type="submit">Publish on Video</button> ' +
             '<a class="ovk-btn ovk-btn--quiet" href="' + esc(source.url) + '" rel="noopener">Open on Video</a></p>' +
-            '<p class="app-status" data-role="status" role="status" aria-live="polite"></p></form>'
-            : '<p class="app-status">The video is still processing on OpenVibe.Video. Reload this page when it is ready. <a href="' + esc(source.url) + '">Open on Video</a></p>';
-        return '<section class="page-intro"><h1>Edit in Studio</h1><p class="fine-print app-source">From <a href="' + esc(source.url) +
-            '" rel="noopener">' + esc(source.name) + '</a> · ' + esc(media.title) + ' · ' + esc(duration) + '</p></section>' +
+            '<p class="app-status" data-role="status" role="status" aria-live="polite"></p></form>';
+        return '<section class="page-intro"><h1>Trim and publish</h1>' + sourceLine + '</section>' +
             '<section class="app-shell" data-studio-edit-video data-studio-media="' + esc(media.id) + '">' + preview + form +
             '<script src="/js/edit-video.js" defer></script></section>';
     };

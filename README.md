@@ -63,9 +63,12 @@ per app keeps the same contract, so a base can be swapped:
 hand-off into Studio. Studio asks the source service with the person's own Network token whether that person may
 read the object; a private object of someone else answers 404 exactly as a missing id does. A picture opens in
 Photo (or `app=light`) with its source named (`From OpenVibe.Cam`); the browser layer fetches the bytes through
-`/api/v1/studio/files/pics/:slug/bytes` and puts them into the running app. A video opens in a plain editor shell
-with its preview at `/api/v1/studio/media/:id/bytes`; when it came from OpenVibe.Video the page offers **Publish on
-Video**, which tells Video's `/api/v1/video/studio/publish` to make a new private copy (the original is unchanged).
+`/api/v1/studio/files/pics/:slug/bytes` and puts them into the running app. A video opens in **Trim and publish**: the preview is at
+`/api/v1/studio/media/:id/bytes`; two seconds fields and **Set start here** / **Set end here** take the time from the
+player, **Use this frame as the cover** records the frame, and **Publish on Video** sends the range, cover, title and
+visibility to Video's `/api/v1/video/studio/publish`. Video's existing cuts service re-encodes that range as a new
+copy (the original is unchanged); the page polls `/api/v1/studio/publish/:cut` until the copy is ready. A range under
+one second or outside the video is refused in plain words.
 
 Set `OV_VIDEO_URL` when Video is not at `https://openvibe.video` (the drill). The Studio routes are documented in
 `server/pages.js` (`/edit`) and `server/api.js` (`/media/:id/bytes`, `/publish`).

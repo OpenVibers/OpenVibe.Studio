@@ -128,7 +128,7 @@ function createPages({ config, sso, pics, video }) {
             '<button class="ovk-btn ovk-btn--quiet" type="button" data-set-end>Set end here</button>' +
             '<p class="fine-print" data-role="range">Keeps ' + clock(0) + ' to ' + clock(duration) + ' (' + spoken(duration) + ')</p></fieldset>' +
             '<p><button class="ovk-btn ovk-btn--quiet" type="button" data-set-cover>Use this frame as the cover</button> ' +
-            '<span class="fine-print" data-role="cover">Cover: the first frame</span></p>' +
+            '<span class="fine-print" data-role="cover">Cover: not chosen yet</span></p>' +
             '<label for="edit-title">Title</label> <input id="edit-title" name="title" type="text" maxlength="120" required value="' + esc(media.title) + '">' +
             '<label for="edit-visibility">Who can see the copy</label> <select id="edit-visibility" name="visibility">' +
             '<option value="private" selected>Only you</option><option value="unlisted">Only people with the link</option><option value="public">Anyone</option></select>' +

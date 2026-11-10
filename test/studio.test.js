@@ -10,7 +10,7 @@ const { createApp } = require('../server/app');
 
 const config = {
     port: 0, host: '127.0.0.1', baseUrl: 'http://studio.test', networkUrl: 'https://openvibe.network',
-    networkInternalUrl: 'http://127.0.0.1:4000', downloadUrl: 'https://openvibe.download', picsUrl: 'https://openvibe.pics',
+    networkInternalUrl: 'http://127.0.0.1:4000', downloadUrl: 'https://openvibe.download', picsUrl: 'https://openvibe.pics', videoUrl: 'https://openvibe.video',
     clientId: 'studio', clientSecret: '', secureCookies: false, trustProxy: 2, drillPort: 15155, bundleRoot: '',
 };
 
@@ -39,7 +39,38 @@ const fakeMedia = {
 
 const fakePics = {
     listImages: async () => [{ id: 'img_a', slug: 'img_a', name: 'mountains.jpg' }],
+    getImage: async (_token, slug) => {
+        if (slug !== 'Abc23456') throw Object.assign(new Error('not found'), { status: 404, code: 'pics.not_found', detail: 'no such picture' });
+        return { id: 'Abc23456', slug: 'Abc23456', name: 'mountains.jpg', page: 'https://openvibe.pics/i/Abc23456' };
+    },
     bytes: async () => ({ name: 'mountains.jpg', contentType: 'image/jpeg', bytes: Buffer.from([1, 2, 3]) }),
+};
+
+const fakeVideo = {
+    calls: [],
+    getMedia: async (token, id) => {
+        fakeVideo.calls.push(['get', token, id]);
+        if (id !== 'vup_ok') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.media_not_found', detail: 'no such video' });
+        return {
+            media: { id: 'vup_ok', kind: 'video', title: 'A recording', status: 'ready', can_edit: true, duration_seconds: 12,
+                watch_url: 'https://openvibe.video/watch?v=abcdefghijk' },
+            source: { id: 'video', name: 'OpenVibe.Video', url: 'https://openvibe.video/watch?v=abcdefghijk' },
+        };
+    },
+    bytes: async (token, id, range) => {
+        fakeVideo.calls.push(['bytes', token, id, range || null]);
+        if (id !== 'vup_ok') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.media_not_found', detail: 'no such video' });
+        return {
+            status: 206,
+            headers: new Headers({ 'content-type': 'video/webm', 'content-range': 'bytes 0-3/4', 'content-length': '4', 'accept-ranges': 'bytes' }),
+            body: new Response('abcd').body,
+        };
+    },
+    publish: async (token, input) => {
+        fakeVideo.calls.push(['publish', token, input]);
+        if (input.media !== 'vup_ok') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.media_not_found', detail: 'no such video' });
+        return { video: { id: 'vup_copy', status: 'processing', url: '/watch?v=copycopycop', watch_url: 'https://openvibe.video/watch?v=copycopycop' } };
+    },
 };
 
 function bundleFixture() {
@@ -61,6 +92,7 @@ async function serve(opts = {}) {
         sso: fakeSso(),
         media: opts.media || fakeMedia,
         pics: opts.pics || fakePics,
+        video: opts.video || fakeVideo,
     });
     const server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -207,4 +239,68 @@ test('the app catalogue, the attribution page and the small endpoints answer', a
     // The release watch then listens on openvibe.events for new releases: the page's CSP must let it (11-09 sweep).
     assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /connect-src[^;]*https:\/\/openvibe\.events/);
     assert.equal((await fetch(s.base + '/nope')).status, 404);
+});
+
+
+test('Edit in Studio is a signed-in hand-off: the source decides who may read the object', async (t) => {
+    fakeVideo.calls.length = 0;
+    const s = await serve(); t.after(s.close);
+    const guest = await fetch(s.base + '/edit?media=vup_ok', { redirect: 'manual' });
+    assert.equal(guest.status, 302);
+    assert.match(guest.headers.get('location'), /^\/auth\/login\?next=/);
+    assert.equal((await fetch(s.base + '/edit?pics=img_a', { redirect: 'manual' })).status, 302);
+
+    const video = await fetch(s.base + '/edit?media=vup_ok&from=video', { headers: { cookie: 'ov_token=person-a' } });
+    assert.equal(video.status, 200);
+    const videoHtml = await video.text();
+    assert.match(videoHtml, /data-studio-edit-video/);
+    assert.match(videoHtml, /From <a href="https:\/\/openvibe\.video\/watch\?v=abcdefghijk"/);
+    assert.match(videoHtml, /OpenVibe\.Video/);
+    assert.match(videoHtml, /Publish on Video/);
+    assert.match(videoHtml, /\/api\/v1\/studio\/media\/vup_ok\/bytes/);
+    assert.deepEqual(fakeVideo.calls[0], ['get', 'person-a', 'vup_ok']);
+
+    // A guessed id answers 404 and never shows another person's title.
+    const hidden = await fetch(s.base + '/edit?media=vup_private', { headers: { cookie: 'ov_token=person-a' } });
+    assert.equal(hidden.status, 404);
+    assert.doesNotMatch(await hidden.text(), /A recording/);
+    assert.equal((await fetch(s.base + '/edit?media=vup_private', { headers: { cookie: 'ov_token=person-a' } })).status, 404);
+
+    const picture = await fetch(s.base + '/edit?pics=Abc23456&from=cam', { headers: { cookie: 'ov_token=person-a' } });
+    assert.equal(picture.status, 200);
+    const pictureHtml = await picture.text();
+    assert.match(pictureHtml, /data-studio-open-source="pics"/);
+    assert.match(pictureHtml, /data-studio-open-id="Abc23456"/);
+    assert.match(pictureHtml, /From <a href="https:\/\/openvibe\.cam"/);
+    assert.match(pictureHtml, /OpenVibe\.Cam/);
+    assert.equal((await fetch(s.base + '/edit?pics=Zyx98765&from=cam', { headers: { cookie: 'ov_token=person-a' } })).status, 404);
+});
+
+test('the video preview and Publish on Video use the person token, and refuse a guessed id', async (t) => {
+    fakeVideo.calls.length = 0;
+    const s = await serve(); t.after(s.close);
+    assert.equal((await fetch(s.base + '/api/v1/studio/media/vup_ok/bytes')).status, 401);
+    const bytes = await fetch(s.base + '/api/v1/studio/media/vup_ok/bytes', { headers: { cookie: 'ov_token=person-a', range: 'bytes=0-3' } });
+    assert.equal(bytes.status, 206);
+    assert.equal(bytes.headers.get('content-range'), 'bytes 0-3/4');
+    assert.equal(await bytes.text(), 'abcd');
+
+    assert.equal((await fetch(s.base + '/api/v1/studio/publish', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).status, 401);
+    const publish = await fetch(s.base + '/api/v1/studio/publish', {
+        method: 'POST',
+        headers: { cookie: 'ov_token=person-a', 'content-type': 'application/json', origin: 'http://studio.test' },
+        body: JSON.stringify({ media: 'vup_ok', title: 'A copy', visibility: 'private' }),
+    });
+    const publishText = await publish.text();
+    assert.equal(publish.status, 202, publishText);
+    const out = JSON.parse(publishText);
+    assert.equal(out.video.watch_url, 'https://openvibe.video/watch?v=copycopycop');
+    assert.deepEqual(fakeVideo.calls.find((call) => call[0] === 'publish').slice(1), ['person-a', { media: 'vup_ok', title: 'A copy', visibility: 'private' }]);
+
+    const hidden = await fetch(s.base + '/api/v1/studio/publish', {
+        method: 'POST',
+        headers: { cookie: 'ov_token=person-a', 'content-type': 'application/json', origin: 'http://studio.test' },
+        body: JSON.stringify({ media: 'vup_private' }),
+    });
+    assert.equal(hidden.status, 404);
 });

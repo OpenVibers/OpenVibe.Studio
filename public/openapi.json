@@ -72,6 +72,67 @@
         }
       }
     },
+    "/api/v1/studio/media/{id}/bytes": {
+      "get": {
+        "summary": "A video's bytes for the Studio editor preview. Video decides whether the signed-in person may read it; Range reads pass through.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The video."
+          },
+          "206": {
+            "description": "The requested range."
+          },
+          "401": {
+            "description": "Sign in required."
+          },
+          "404": {
+            "description": "No such video, or it is not this person's to open."
+          }
+        }
+      }
+    },
+    "/api/v1/studio/publish": {
+      "post": {
+        "summary": "Publish an edit back on OpenVibe.Video as a new private copy (the original is unchanged).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["media"],
+                "properties": {
+                  "media": { "type": "string", "description": "The OpenVibe.Video id (vup_, /watch?v= id or Media VOD id)." },
+                  "title": { "type": "string", "maxLength": 120 },
+                  "visibility": { "type": "string", "enum": ["private", "unlisted", "public"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The copy is being published on Video."
+          },
+          "401": {
+            "description": "Sign in required."
+          },
+          "404": {
+            "description": "No such video, or it is not this person's to publish."
+          }
+        }
+      }
+    },
     "/api/v1/studio/save": {
       "post": {
         "summary": "Save a file to the person's OpenVibe.Download drive.",

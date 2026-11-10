@@ -265,6 +265,7 @@ test('Edit in Studio is a signed-in hand-off: the source decides who may read th
     assert.match(videoHtml, /Use this frame as the cover/);
     assert.match(videoHtml, /id="edit-start"/);
     assert.match(videoHtml, /id="edit-end"/);
+    assert.match(videoHtml, /Keeps 0:00 to 0:12 \(12 s\)/);
     assert.match(videoHtml, /From <a href="https:\/\/openvibe\.video\/watch\?v=abcdefghijk"/);
     assert.match(videoHtml, /OpenVibe\.Video/);
     assert.match(videoHtml, /Publish on Video/);

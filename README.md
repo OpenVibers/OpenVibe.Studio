@@ -86,7 +86,7 @@ The service is MIT licensed ([LICENSE](LICENSE)). The apps keep their own licenc
 attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 <!-- versions:start -->
-- openvibe-contracts: v0.373.0
+- openvibe-contracts: v0.384.0
 - openvibe-sdk: v0.125.0
 - openvibe-shared: v4.179.0
 <!-- versions:end -->

@@ -245,6 +245,7 @@ test('the app catalogue, the attribution page and the small endpoints answer', a
     assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /connect-src[^;]*https:\/\/openvibe\.events/);
     // Avatars are served from openvibe.media (the Network's /avatar/<name> redirects there): img-src must let them show.
     assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /img-src[^;]*https:\/\/openvibe\.media(?:[ ;]|$)/);
+    assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /frame-src 'self' https:\/\/openvibe\.network(?:;|$)/);
     assert.equal((await fetch(s.base + '/nope')).status, 404);
 });
 

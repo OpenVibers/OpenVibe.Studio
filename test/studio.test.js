@@ -243,6 +243,8 @@ test('the app catalogue, the attribution page and the small endpoints answer', a
     { const r = await fetch(s.base + '/release.json'); assert.equal(r.status, 200, 'the navbar release watch polls /release.json'); assert.equal((await r.json()).service, 'studio'); }
     // The release watch then listens on openvibe.events for new releases: the page's CSP must let it (11-09 sweep).
     assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /connect-src[^;]*https:\/\/openvibe\.events/);
+    // Avatars are served from openvibe.media (the Network's /avatar/<name> redirects there): img-src must let them show.
+    assert.match((await fetch(s.base + '/')).headers.get('content-security-policy') || '', /img-src[^;]*https:\/\/openvibe\.media(?:[ ;]|$)/);
     assert.equal((await fetch(s.base + '/nope')).status, 404);
 });
 

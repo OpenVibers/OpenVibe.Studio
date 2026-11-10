@@ -103,16 +103,19 @@
     },
     "/api/v1/studio/publish": {
       "post": {
-        "summary": "Publish an edit back on OpenVibe.Video as a new private copy (the original is unchanged).",
+        "summary": "Queue a trim of a video as a new copy on OpenVibe.Video (the original is unchanged).",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["media"],
+                "required": ["media", "start", "end"],
                 "properties": {
                   "media": { "type": "string", "description": "The OpenVibe.Video id (vup_, /watch?v= id or Media VOD id)." },
+                  "start": { "type": "number", "minimum": 0, "description": "Seconds into the video." },
+                  "end": { "type": "number", "minimum": 0, "description": "Seconds into the video; at least one second after start." },
+                  "cover": { "type": "number", "minimum": 0, "description": "Seconds into the video for the cover frame." },
                   "title": { "type": "string", "maxLength": 120 },
                   "visibility": { "type": "string", "enum": ["private", "unlisted", "public"] }
                 }
@@ -122,14 +125,30 @@
         },
         "responses": {
           "202": {
-            "description": "The copy is being published on Video."
+            "description": "The trim is queued; poll /api/v1/studio/publish/{id}."
           },
           "401": {
             "description": "Sign in required."
           },
           "404": {
             "description": "No such video, or it is not this person's to publish."
+          },
+          "422": {
+            "description": "The range is under one second, outside the video, or otherwise invalid."
           }
+        }
+      }
+    },
+    "/api/v1/studio/publish/{id}": {
+      "get": {
+        "summary": "How a queued trim is going, and the copy's address when it is done.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "The cut: queued, measuring, rendering, done with its result, or failed." },
+          "401": { "description": "Sign in required." },
+          "404": { "description": "No such edit, or it is not this person's." }
         }
       }
     },

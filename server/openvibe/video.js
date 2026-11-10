@@ -13,7 +13,8 @@ const { StudioError } = require('./media');
  *
  *   GET  /api/v1/video/studio/media/:id         { media, source }
  *   GET  /api/v1/video/studio/media/:id/bytes   the bytes (Range reads for the preview)
- *   POST /api/v1/video/studio/publish           { media, title, visibility } → { video }
+ *   POST /api/v1/video/studio/publish           { media, start, end, cover, title, visibility } → { cut }
+ *   GET  /api/v1/video/studio/cuts/:id          how the trim is going → { cut }
  */
 function createVideoClient({ baseUrl, fetchImpl = globalThis.fetch }) {
     const root = String(baseUrl || '').replace(/\/+$/, '');
@@ -50,14 +51,16 @@ function createVideoClient({ baseUrl, fetchImpl = globalThis.fetch }) {
             }
             return { status: res.status, headers: res.headers, body: res.body };
         },
+        /** Queue a trim; Video's cuts worker makes the copy and the page polls cut(). */
         async publish(token, input) {
-            const data = await request(token, '/studio/publish', {
+            return await request(token, '/studio/publish', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(input || {}),
-                timeoutMs: 6 * 3600_000,
             });
-            return data;
+        },
+        async cut(token, id) {
+            return await request(token, '/studio/cuts/' + encodeURIComponent(id));
         },
     };
 }

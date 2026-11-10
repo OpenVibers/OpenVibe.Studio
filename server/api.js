@@ -92,10 +92,22 @@ function createApi({ config, sso, media, pics, video }) {
         if (typeof b.media !== 'string' || !/^[A-Za-z0-9_.:-]{1,80}$/.test(b.media)) {
             throw new StudioError(422, 'studio.publish.invalid', 'Open a video with /edit?media=<id> first.');
         }
+        const start = Number(b.start);
+        const end = Number(b.end);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) throw new StudioError(422, 'studio.publish.invalid', 'Choose a start and an end inside the video.');
+        if (b.cover !== undefined && b.cover !== null && b.cover !== '' && !Number.isFinite(Number(b.cover))) throw new StudioError(422, 'studio.publish.invalid', 'Choose a cover frame inside the video.');
         if (b.title !== undefined && typeof b.title !== 'string') throw new StudioError(422, 'studio.publish.invalid', 'The title must be text.');
         if (b.visibility !== undefined && !['private', 'unlisted', 'public'].includes(b.visibility)) throw new StudioError(422, 'studio.publish.invalid', 'Choose private, unlisted or public.');
-        const out = await video.publish(value, { media: b.media, title: b.title, visibility: b.visibility });
+        const out = await video.publish(value, { media: b.media, start, end, cover: b.cover, title: b.title, visibility: b.visibility });
         res.status(202).json(out);
+    }));
+
+    /** Poll the trim Studio queued: queued, measuring, rendering, done (with the copy) or failed. */
+    r.get('/publish/:id', wrap(async (req, res) => {
+        const value = token(req, res);
+        if (!value) return;
+        const out = await video.cut(value, String(req.params.id || ''));
+        res.json(out);
     }));
 
     r.post('/save', express.raw({ type: '*/*', limit: '256mb' }), wrap(async (req, res) => {

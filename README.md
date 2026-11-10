@@ -2,6 +2,9 @@
 
 Photo and Light: two open-source creative apps served inside an OpenVibe account.
 
+**Live site:** https://openvibe.studio · **API docs:** https://openvibe.services · **For AI:** https://openvibe.studio/llms.txt
+**Run it:** `npm ci && npm run dev` (Node 22 or newer) · **Tests:** `npm test`
+
 - **Photo** is [PhotoCraft](https://github.com/storytold/photocraft), a layered photo editor.
 - **Light** is [LightCraft](https://github.com/storytold/lightcraft), a photo library and RAW developer.
 
@@ -86,7 +89,7 @@ The service is MIT licensed ([LICENSE](LICENSE)). The apps keep their own licenc
 attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 <!-- versions:start -->
-- openvibe-contracts: v0.373.0
+- openvibe-contracts: v0.384.0
 - openvibe-sdk: v0.125.0
 - openvibe-shared: v4.179.0
 <!-- versions:end -->

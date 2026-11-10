@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use OpenVibe.Studio in research or a product, cite it as below."
+title: openvibe-studio
+type: software
+authors:
+  - name: OpenVibe
+    alias: OpenVibers
+    website: https://openvibe.network
+repository-code: https://github.com/OpenVibers/OpenVibe.Studio
+url: https://openvibe.studio
+license: MIT
+abstract: "Photo and Light, two open-source creative apps inside an OpenVibe account, at openvibe.studio."
+keywords:
+  - openvibe
+  - creative-tools
+  - image-editing
+  - photo-editor
+  - web

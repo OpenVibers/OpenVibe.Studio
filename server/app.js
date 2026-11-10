@@ -8,6 +8,7 @@ const { createPages } = require('./pages');
 const { createBundleFiles } = require('./bundle-files');
 const { createMediaClient } = require('./openvibe/media');
 const { createPicsClient } = require('./openvibe/pics');
+const { createVideoClient } = require('./openvibe/video');
 const { APPS } = require('./product');
 const seo = require('openvibe-shared/seo');
 const agentDescriptor = require('./agent-descriptor');
@@ -35,6 +36,7 @@ function createApp(opts = {}) {
     });
     const media = opts.media || createMediaClient({ baseUrl: config.downloadUrl, fetchImpl: opts.fetchImpl });
     const pics = opts.pics || createPicsClient({ baseUrl: config.picsUrl, fetchImpl: opts.fetchImpl });
+    const video = opts.video || createVideoClient({ baseUrl: config.videoUrl, fetchImpl: opts.fetchImpl });
     const app = express();
     app.disable('x-powered-by');
     app.set('trust proxy', config.trustProxy);
@@ -75,14 +77,14 @@ function createApp(opts = {}) {
     app.get('/.well-known/agent.json', (_req, res) => res.set('Cache-Control', 'public, max-age=3600').json(agentDescriptor));
     app.get('/openapi.json', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'openapi.json')));
     app.use('/api/v1/studio', require('./image-tools').createImageTools({ config, sso, pics, fetchImpl: opts.fetchImpl }));
-    app.use('/api/v1/studio', createApi({ sso, media, pics }));
+    app.use('/api/v1/studio', createApi({ config, sso, media, pics, video }));
     // GET /release.json (ADR-016): the navbar's release watch polls it so open tabs learn of a new release (the 11-09
     // browser sweep found it answering 404 here).
     require('openvibe-shared/release').createRelease({ service: 'studio', root: path.join(__dirname, '..') }).mount(app);
     app.use('/shared', require('openvibe-shared/serve').handler());
     app.use('/apps', createBundleFiles({ root: config.bundleRoot }));
     app.use(express.static(path.join(__dirname, '..', 'public'), { index: false, maxAge: '1h' }));
-    app.use(createPages({ config, sso, media, pics }));
+    app.use(createPages({ config, sso, media, pics, video }));
     app.use((err, _req, res, _next) => {
         if (res.headersSent) return;
         res.status(err.status || 500).type('text/plain').send('Studio could not complete that request.');

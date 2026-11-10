@@ -17,6 +17,7 @@ function load(env = process.env) {
         downloadUrl: trim(env.OV_DOWNLOAD_URL || 'https://openvibe.download'),
         imageWorkerUrl: trim(env.STUDIO_IMAGE_WORKER_URL || ''),
         picsUrl: trim(env.OV_PICS_URL || 'https://openvibe.pics'),
+        videoUrl: trim(env.OV_VIDEO_URL || 'https://openvibe.video'),
         clientId: env.OV_OAUTH_CLIENT_ID || 'studio',
         clientSecret: env.OV_OAUTH_CLIENT_SECRET || '',
         secureCookies: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production',

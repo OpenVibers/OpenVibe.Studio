@@ -57,6 +57,19 @@ per app keeps the same contract, so a base can be swapped:
 - **PhotoCraft** has no scriptable API in the browser: a file is dropped on the app, and there is
   no export the page can ask for. The app page says so.
 
+## Hand-off from Video and Cam
+
+`GET /edit?media=<OpenVibe.Video id>&from=video` and `GET /edit?pics=<Pics slug>&from=cam` are the signed-in
+hand-off into Studio. Studio asks the source service with the person's own Network token whether that person may
+read the object; a private object of someone else answers 404 exactly as a missing id does. A picture opens in
+Photo (or `app=light`) with its source named (`From OpenVibe.Cam`); the browser layer fetches the bytes through
+`/api/v1/studio/files/pics/:slug/bytes` and puts them into the running app. A video opens in a plain editor shell
+with its preview at `/api/v1/studio/media/:id/bytes`; when it came from OpenVibe.Video the page offers **Publish on
+Video**, which tells Video's `/api/v1/video/studio/publish` to make a new private copy (the original is unchanged).
+
+Set `OV_VIDEO_URL` when Video is not at `https://openvibe.video` (the drill). The Studio routes are documented in
+`server/pages.js` (`/edit`) and `server/api.js` (`/media/:id/bytes`, `/publish`).
+
 ## Honest limits
 
 - Heavy first load: both apps are native editors compiled to WebAssembly.

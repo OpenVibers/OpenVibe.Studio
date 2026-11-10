@@ -228,5 +228,17 @@
         }
     });
 
+    // A hand-off from Cam/Pics/Video: the page says which object to open; the bytes come through
+    // Studio's own API, which asks the source service whether this person may read it.
+    const openSource = root.getAttribute('data-studio-open-source');
+    const openId = root.getAttribute('data-studio-open-id');
+    const openName = root.getAttribute('data-studio-open-name');
+    if (openSource && openId) {
+        const start = () => openBytes(openSource, openId, openName || 'the file');
+        if (!iframe) start();
+        else if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') window.setTimeout(start, 1000);
+        else iframe.addEventListener('load', () => window.setTimeout(start, 1000), { once: true });
+    }
+
     say(appId + ' is ready.');
 })();

@@ -1,9 +1,10 @@
 'use strict';
 const express = require('express');
+const { Readable } = require('node:stream');
 const { ADAPTERS } = require('./adapters');
 
 /** The Studio API: what the apps are, what a person owns, and the way in and out. */
-function createApi({ sso, media, pics }) {
+function createApi({ config, sso, media, pics, video }) {
     const r = express.Router();
 
     const token = (req, res) => {
@@ -63,6 +64,38 @@ function createApi({ sso, media, pics }) {
         res.set('Content-Disposition', 'attachment; filename="' + name + '"');
         res.set('Cache-Control', 'private, no-store');
         res.send(file.bytes);
+    }));
+
+    /** The video bytes a Studio editor previews: the person's token goes to Video, which decides access. */
+    r.get('/media/:id/bytes', wrap(async (req, res) => {
+        const value = token(req, res);
+        if (!value) return;
+        const out = await video.bytes(value, String(req.params.id || ''), req.get('range'));
+        res.status(out.status);
+        res.set('Cache-Control', 'private, no-store');
+        for (const name of ['content-type', 'content-range', 'content-length', 'accept-ranges']) {
+            const v = out.headers.get(name);
+            if (v) res.set(name, v);
+        }
+        Readable.fromWeb(out.body).pipe(res);
+    }));
+
+    /** The reverse link: publish an edit back on OpenVibe.Video (Video makes the copy). */
+    r.post('/publish', express.json({ limit: '16kb' }), wrap(async (req, res) => {
+        const value = token(req, res);
+        if (!value) return;
+        const bearer = /^Bearer /i.test(req.get('authorization') || '');
+        if (!bearer && req.get('origin') !== config.baseUrl && req.get('sec-fetch-site') !== 'same-origin') {
+            throw new StudioError(403, 'request.cross_site', 'Publish from Studio itself.');
+        }
+        const b = req.body || {};
+        if (typeof b.media !== 'string' || !/^[A-Za-z0-9_.:-]{1,80}$/.test(b.media)) {
+            throw new StudioError(422, 'studio.publish.invalid', 'Open a video with /edit?media=<id> first.');
+        }
+        if (b.title !== undefined && typeof b.title !== 'string') throw new StudioError(422, 'studio.publish.invalid', 'The title must be text.');
+        if (b.visibility !== undefined && !['private', 'unlisted', 'public'].includes(b.visibility)) throw new StudioError(422, 'studio.publish.invalid', 'Choose private, unlisted or public.');
+        const out = await video.publish(value, { media: b.media, title: b.title, visibility: b.visibility });
+        res.status(202).json(out);
     }));
 
     r.post('/save', express.raw({ type: '*/*', limit: '256mb' }), wrap(async (req, res) => {

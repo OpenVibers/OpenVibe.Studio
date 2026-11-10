@@ -36,6 +36,13 @@ function createPicsClient({ baseUrl, fetchImpl = globalThis.fetch }) {
             const images = Array.isArray(data.images) ? data.images : (Array.isArray(data) ? data : []);
             return images.map(wire);
         },
+        /** One picture's metadata as the person may read it (404 for someone else's private one). */
+        async getImage(token, slug) {
+            const data = await request('/images/' + encodeURIComponent(slug), token);
+            const image = wire(data.image || data);
+            if (!image.slug) image.slug = String(slug);
+            return image;
+        },
         async bytes(slug, token) {
             const data = await request('/images/' + encodeURIComponent(slug), token);
             const image = wire(data.image || data);

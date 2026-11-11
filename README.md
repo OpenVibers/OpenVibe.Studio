@@ -90,7 +90,7 @@ attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 <!-- versions:start -->
 - openvibe-contracts: v0.406.0
-- openvibe-sdk: v0.147.0
+- openvibe-sdk: v0.150.0
 - openvibe-shared: v4.206.0
 <!-- versions:end -->
 

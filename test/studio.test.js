@@ -109,6 +109,8 @@ test('the home names both apps, their limits and their licences', async (t) => {
     const res = await fetch(s.base);
     assert.equal(res.status, 200);
     const html = await res.text();
+    assert.match(html, /<script type="application\/ld\+json">[^<]*"@type":"WebSite"/, 'the home carries the site entity for search engines');
+    assert.match(html, /"name":"OpenVibe\.Studio"/);
     assert.match(html, /PhotoCraft/);
     assert.match(html, /LightCraft/);
     assert.match(html, /Good to know/);

@@ -7,7 +7,7 @@
   "port": 5155,
   "drill_port": 15155,
   "domain": "openvibe.studio",
-  "contracts": "openvibe-contracts v0.417.0, openvibe-sdk v0.160.0, openvibe-shared v4.225.0",
+  "contracts": "openvibe-contracts v0.417.0, openvibe-sdk v0.161.0, openvibe-shared v4.225.0",
   "capabilities": [
     "studio.apps.list",
     "studio.files.list",

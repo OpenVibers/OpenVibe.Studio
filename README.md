@@ -91,7 +91,7 @@ attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 <!-- versions:start -->
 - openvibe-contracts: v0.419.0
 - openvibe-sdk: v0.161.0
-- openvibe-shared: v4.231.0
+- openvibe-shared: v4.232.0
 <!-- versions:end -->
 
 ### Pics image tools

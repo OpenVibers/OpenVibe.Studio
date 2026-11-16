@@ -101,3 +101,9 @@ returning JPEG, PNG or WebP bytes. No person token is sent to that worker; it re
 only the selected picture. The worker is not supplied by this PR. Without it the
 capability endpoint reports unavailable, the UI disables submission and the API
 returns 503. Tests use an in-process fake; no model calls or spending occurred.
+
+<!-- versions:start -->
+- openvibe-contracts: v0.443.0
+- openvibe-sdk: v0.177.0
+- openvibe-shared: v4.288.0
+<!-- versions:end -->

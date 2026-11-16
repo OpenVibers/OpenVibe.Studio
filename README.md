@@ -88,10 +88,6 @@ Set `OV_VIDEO_URL` when Video is not at `https://openvibe.video` (the drill). Th
 The service is MIT licensed ([LICENSE](LICENSE)). The apps keep their own licences, and the
 attribution is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
-<!-- versions:start -->
-- openvibe-contracts: v0.419.0
-<!-- versions:end -->
-
 ### Pics image tools
 
 `/image-tools?picture=<slug>` opens an edit of a Pics picture. The authenticated

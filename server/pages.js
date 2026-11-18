@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const { esc } = require('./html');
-const { send } = require('./layout');
+const { send, isPerson } = require('./layout');
 const { ADAPTERS } = require('./adapters');
 const { hasBundle } = require('./bundles');
 const { APPS } = require('./product');
@@ -89,7 +89,7 @@ function createPages({ config, sso, pics, video }) {
               '" data-studio-open-name="' + esc(open.name || '') + '"'
             : '';
         return '<section class="app-shell" data-studio-app="' + esc(adapter.id) + '" data-studio-driver="' + esc(adapter.driver) +
-            '" data-studio-signed-in="' + (viewer.kind === 'user' ? 'true' : 'false') + '"' + openAttrs + '>' + head + files + frame + '</section>' + scripts;
+            '" data-studio-signed-in="' + (isPerson(viewer) ? 'true' : 'false') + '"' + openAttrs + '>' + head + files + frame + '</section>' + scripts;
     };
 
     const clock = (seconds) => {
@@ -145,7 +145,19 @@ function createPages({ config, sso, pics, video }) {
         title, viewer, config, path: '/edit',
         body: '<section class="page-intro"><h1>' + esc(title) + '</h1><p>' + esc(detail) + '</p><p><a class="button-primary" href="/">Back to Studio</a></p></section>',
     }, status);
-    const editSignIn = (res, req) => { res.redirect(302, '/auth/login?next=' + encodeURIComponent(req.originalUrl || '/edit')); };
+    // Sign in, then back here once: the way back carries signed=1, and a refusal after that is said on the page, never sent
+    // round again (11-18: Edit in Studio went /edit → /auth/login → /edit … until nginx answered 429).
+    const editSignIn = (res, req) => {
+        const here = String(req.originalUrl || '/edit');
+        if (req.query && req.query.signed === '1') {
+            const again = here.replace(/([?&])signed=1(&|$)/, (_m, a, b) => (b ? a : '')).replace(/[?&]$/, '');
+            send(res, { title: 'Studio could not open this', viewer: viewerOf(req), config, path: '/edit',
+                body: '<section class="page-intro"><h1>Studio could not open this</h1><p>You are signed in, but the place it comes from did not accept that sign-in just now.</p>' +
+                    '<p><a class="button-primary" href="/auth/login?next=' + esc(encodeURIComponent(again)) + '">Sign in again</a> <a class="button-secondary" href="/">Back to Studio</a></p></section>' }, 401);
+            return;
+        }
+        res.redirect(302, '/auth/login?next=' + encodeURIComponent(here + (here.includes('?') ? '&' : '?') + 'signed=1'));
+    };
 
     /**
      * GET /edit?media=<OpenVibe.Video id>&from=video     a recording opened from Video
@@ -159,7 +171,7 @@ function createPages({ config, sso, pics, video }) {
     r.get('/edit', async (req, res) => {
         const viewer = viewerOf(req);
         const token = sso.extractToken(req);
-        if (!viewer || viewer.kind !== 'user' || !token) { editSignIn(res, req); return; }
+        if (!isPerson(viewer) || !token) { editSignIn(res, req); return; }
         const picsSlug = String(req.query.pics || '');
         const mediaId = String(req.query.media || '');
         const from = String(req.query.from || '').slice(0, 20);

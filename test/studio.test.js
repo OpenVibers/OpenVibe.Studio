@@ -18,7 +18,8 @@ function fakeSso() {
     return {
         router: () => express.Router(),
         optionalAuth: () => (req, _res, next) => {
-            if ((req.headers.cookie || '').includes('ov_token=person-a')) req.user = { kind: 'user', sub: 'usr_a', displayName: 'Person A' };
+            // The claims Network signs (sub, username, display_name …): no `kind` (11-18: a fake with kind 'user' hid the /edit loop).
+            if ((req.headers.cookie || '').includes('ov_token=person-a')) req.user = { sub: 'usr_a', id: 'usr_a', username: 'person-a', display_name: 'Person A', role: 'user' };
             next();
         },
         extractToken: (req) => {
@@ -50,6 +51,7 @@ const fakeVideo = {
     calls: [],
     getMedia: async (token, id) => {
         fakeVideo.calls.push(['get', token, id]);
+        if (id === 'vup_refused') throw Object.assign(new Error('refused'), { status: 401, code: 'auth.invalid', detail: 'token refused' });
         if (id !== 'vup_ok') throw Object.assign(new Error('not found'), { status: 404, code: 'studio.media_not_found', detail: 'no such video' });
         return {
             media: { id: 'vup_ok', kind: 'video', title: 'A recording', status: 'ready', can_edit: true, duration_seconds: 12,
@@ -291,6 +293,27 @@ test('Edit in Studio is a signed-in hand-off: the source decides who may read th
     assert.match(pictureHtml, /From <a href="https:\/\/openvibe\.cam"/);
     assert.match(pictureHtml, /OpenVibe\.Cam/);
     assert.equal((await fetch(s.base + '/edit?pics=Zyx98765&from=cam', { headers: { cookie: 'ov_token=person-a' } })).status, 404);
+});
+
+test('Edit in Studio never loops: a signed-in person opens it, and a refusal after signing in is said, not sent round (11-18)', async (t) => {
+    const s = await serve(); t.after(s.close);
+    // Signed in (Network's claims, no kind): the editor, not a trip to sign in.
+    const opened = await fetch(s.base + '/edit?media=vup_ok&from=video', { headers: { cookie: 'ov_token=person-a' }, redirect: 'manual' });
+    assert.equal(opened.status, 200);
+    assert.match(opened.headers.get('cache-control') || '', /private/);
+    // A guest goes to sign in once, and the way back says so.
+    const guest = await fetch(s.base + '/edit?media=vup_ok&from=video', { redirect: 'manual' });
+    assert.equal(guest.status, 302);
+    const next = new URL(guest.headers.get('location'), s.base).searchParams.get('next');
+    assert.equal(next, '/edit?media=vup_ok&from=video&signed=1');
+    // The source refuses the sign-in: the first time, sign in again; back from that, a page that says so (no redirect).
+    const refused = await fetch(s.base + '/edit?media=vup_refused', { headers: { cookie: 'ov_token=person-a' }, redirect: 'manual' });
+    assert.equal(refused.status, 302);
+    const after = await fetch(s.base + '/edit?media=vup_refused&signed=1', { headers: { cookie: 'ov_token=person-a' }, redirect: 'manual' });
+    assert.equal(after.status, 401);
+    const body = await after.text();
+    assert.match(body, /Studio could not open this/);
+    assert.match(body, /href="\/auth\/login\?next=%2Fedit%3Fmedia%3Dvup_refused"/);
 });
 
 test('the video preview and Publish on Video use the person token, and refuse a guessed id', async (t) => {

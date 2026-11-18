@@ -4,7 +4,7 @@
 }
 html { background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
 body { margin: 0; }
-.studio-page { box-sizing: border-box; max-width: 1180px; margin: 0 auto; padding: 18px 24px 80px; }
+.studio-page { box-sizing: border-box; max-width: 1180px; margin: 0 auto; padding: 12px 24px 80px; }
 .studio-page a { color: var(--accent); text-underline-offset: 3px; }
 .hero { padding: 56px 0 40px; max-width: 780px; }
 .hero h1, .page-intro h1, .app-head h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); line-height: 1.05; letter-spacing: -.045em; margin: 12px 0 18px; }
@@ -69,3 +69,7 @@ html { background: var(--paper); color: var(--ink); }
 #limits h2 { font-size: 1.25rem; margin: 0 0 10px; }
 #licences .fine-print a { color: inherit; }
 @media (max-width: 600px) { .hero .button-primary, .hero .button-secondary { display: flex; align-items: center; justify-content: center; min-height: 48px; padding-top: 0; padding-bottom: 0; margin: 0 0 10px; } }
+/* Design rule 201: the intro is one line on a computer, at most two on a phone. */
+@media (max-width: 640px) { .page-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } }
+/* Design rule 201 (the owner, 11-14): a page starts within 12 px of the bar, 8 px on a phone. */
+@media (max-width: 640px) { .studio-page { padding-top: 8px; } }

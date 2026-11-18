@@ -14,5 +14,11 @@ function page({ title, body, viewer, config, path = '/' }) {
         head: `<link rel="stylesheet" href="${serve.url('kit.css')}"><link rel="stylesheet" href="/css/studio.css"><meta name="referrer" content="strict-origin-when-cross-origin">`,
         body: `<div id="navbar-mount"></div><main id="main" class="studio-page">${body}</main>` });
 }
-function send(res, opts, status = 200) { res.set('Cache-Control', opts.viewer?.kind === 'user' ? 'private, no-store' : 'public, max-age=60'); res.set('Vary', 'Cookie'); res.status(status).type('html').send(page(opts)); }
-module.exports = { page, send, NAV };
+/**
+ * A person is signed in (11-18): the session's claims are Network's (sub, username …) and carry no `kind`; only an
+ * anonymous viewer is marked. Checking for kind 'user' sent every real person from /edit to sign in and back, round
+ * and round until nginx answered 429, and cached their pages as public.
+ */
+function isPerson(viewer) { return !!viewer && viewer.kind !== 'anonymous' && (viewer.kind === 'user' || !!(viewer.sub || viewer.id)); }
+function send(res, opts, status = 200) { res.set('Cache-Control', isPerson(opts.viewer) ? 'private, no-store' : 'public, max-age=60'); res.set('Vary', 'Cookie'); res.status(status).type('html').send(page(opts)); }
+module.exports = { page, send, NAV, isPerson };

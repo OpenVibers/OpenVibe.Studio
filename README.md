@@ -103,7 +103,7 @@ capability endpoint reports unavailable, the UI disables submission and the API
 returns 503. Tests use an in-process fake; no model calls or spending occurred.
 
 <!-- versions:start -->
-- openvibe-contracts: v0.443.0
+- openvibe-contracts: v0.449.0
 - openvibe-sdk: v0.188.0
 - openvibe-shared: v4.320.0
 <!-- versions:end -->

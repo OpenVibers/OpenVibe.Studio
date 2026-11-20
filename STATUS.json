@@ -7,7 +7,7 @@
   "port": 5155,
   "drill_port": 15155,
   "domain": "openvibe.studio",
-  "contracts": "openvibe-contracts v0.449.0, openvibe-sdk v0.188.0, openvibe-shared v4.325.0",
+  "contracts": "openvibe-contracts v0.449.0, openvibe-sdk v0.188.0, openvibe-shared v4.327.0",
   "capabilities": [
     "studio.apps.list",
     "studio.files.list",
@@ -91,5 +91,5 @@
     "the sign-in gating of Save, the files listing and the page rendering (test/studio.test.js)",
     "the OpenVibe.Download client (test/media.test.js)"
   ],
-  "updated": "2026-11-19"
+  "updated": "2026-11-20"
 }

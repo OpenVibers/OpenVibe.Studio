@@ -9,7 +9,7 @@ body { margin: 0; }
 .hero { padding: 56px 0 40px; max-width: 780px; }
 .hero h1, .page-intro h1, .app-head h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); line-height: 1.05; letter-spacing: -.045em; margin: 12px 0 18px; }
 .hero p, .page-intro p, .app-head p { color: var(--muted); font-size: 1.06rem; line-height: 1.6; max-width: 68ch; }
-.eyebrow { font-size: .72rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+.eyebrow { font-size: .75rem; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
 .button-primary, .button-secondary, .button-danger, .button-quiet {
   display: inline-flex; min-height: 44px; align-items: center; justify-content: center; box-sizing: border-box;
   padding: 0 18px; border: 1px solid transparent; border-radius: 12px; font-weight: 700; text-decoration: none;

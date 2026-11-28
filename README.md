@@ -105,5 +105,5 @@ returns 503. Tests use an in-process fake; no model calls or spending occurred.
 <!-- versions:start -->
 - openvibe-contracts: v0.454.0
 - openvibe-sdk: v0.191.0
-- openvibe-shared: v4.339.0
+- openvibe-shared: v4.342.0
 <!-- versions:end -->

@@ -2,6 +2,7 @@
 const express = require('express');
 const { Readable } = require('node:stream');
 const { ADAPTERS } = require('./adapters');
+const { StudioError } = require('./openvibe/media');
 
 /** The Studio API: what the apps are, what a person owns, and the way in and out. */
 function createApi({ config, sso, media, pics, video }) {
